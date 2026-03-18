@@ -20,11 +20,12 @@ pi install git:github.com/HazAT/pi-interactive-subagents
 
 ### Extensions
 
-**Subagents** — 4 tools + 3 commands for spawning and managing sub-agents:
+**Subagents** — 5 tools + 3 commands for spawning and managing sub-agents:
 
 | Tool | Description |
 |------|-------------|
 | `subagent` | Spawn a sub-agent in a dedicated cmux terminal |
+| `parallel_subagents` | Run multiple autonomous sub-agents concurrently with tiled layout |
 | `subagents_list` | List available agent definitions |
 | `set_tab_title` | Update cmux tab title to show progress |
 | `subagent_resume` | Resume a previous sub-agent session |
