@@ -326,7 +326,9 @@ async function runSubagent(
       ? `PI_DENY_TOOLS=${shellEscape([...denySet].join(","))} `
       : "";
 
-    // Write context to artifact file
+    // Write task to an artifact file and pass via @file.
+    // pi combines @file text and CLI messages into a single initial user message,
+    // so the agent receives this as a normal user prompt (not a file attachment).
     const sessionId = ctx.sessionManager.getSessionId();
     const artifactDir = getArtifactDir(ctx.cwd, sessionId);
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
