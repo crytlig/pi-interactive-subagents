@@ -334,7 +334,13 @@ export function renameWorkspace(title: string): void {
     return;
   }
 
-  zellijActionSync(["rename-session", title]);
+  // Skip session rename for zellij. rename-session renames the socket file
+  // but the ZELLIJ_SESSION_NAME env var in the parent process keeps the old
+  // name, so all subsequent `zellij action ...` CLI calls fail with
+  // "There is no active session!" because the CLI can't find the socket.
+  // Additionally, pi titles often contain special characters (em dashes,
+  // spaces) that fail zellij's session name validation on lookup.
+  // rename-tab (called separately) is sufficient for user-visible naming.
 }
 
 /**
@@ -382,19 +388,16 @@ export function readScreen(surface: string, lines = 50): string {
     );
   }
 
-  const tmpPath = join(
-    tmpdir(),
-    `pi-subagent-zellij-screen-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`,
+  // Zellij 0.44+: use --pane-id flag + stdout instead of env var + temp file.
+  // The ZELLIJ_PANE_ID env var doesn't reliably target other panes for dump-screen,
+  // and --path may silently fail to create the file. Stdout capture is robust.
+  const paneId = zellijPaneId(surface);
+  const raw = execFileSync(
+    "zellij",
+    ["action", "dump-screen", "--pane-id", paneId],
+    { encoding: "utf8" },
   );
-  try {
-    zellijActionSync(["dump-screen", tmpPath], surface);
-    const raw = readFileSync(tmpPath, "utf8");
-    return tailLines(raw, lines);
-  } finally {
-    try {
-      rmSync(tmpPath, { force: true });
-    } catch {}
-  }
+  return tailLines(raw, lines);
 }
 
 /**
@@ -421,19 +424,14 @@ export async function readScreenAsync(surface: string, lines = 50): Promise<stri
     return stdout;
   }
 
-  const tmpPath = join(
-    tmpdir(),
-    `pi-subagent-zellij-screen-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`,
+  // Zellij 0.44+: use --pane-id flag + stdout instead of env var + temp file.
+  const paneId = zellijPaneId(surface);
+  const { stdout } = await execFileAsync(
+    "zellij",
+    ["action", "dump-screen", "--pane-id", paneId],
+    { encoding: "utf8" },
   );
-  try {
-    await zellijActionAsync(["dump-screen", tmpPath], surface);
-    const raw = readFileSync(tmpPath, "utf8");
-    return tailLines(raw, lines);
-  } finally {
-    try {
-      rmSync(tmpPath, { force: true });
-    } catch {}
-  }
+  return tailLines(stdout, lines);
 }
 
 /**
