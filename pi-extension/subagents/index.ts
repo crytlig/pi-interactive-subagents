@@ -24,7 +24,7 @@ import {
   exitStatusVar,
   renameCurrentTab,
   renameWorkspace,
-} from "./cmux.ts";
+} from "./tmux.ts";
 import { getNewEntries, findLastAssistantMessage } from "./session.ts";
 
 const SubagentParams = Type.Object({

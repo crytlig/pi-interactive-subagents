@@ -4,7 +4,7 @@ description: >
   Planning workflow. Spawns a spec agent to clarify WHAT to build, then a
   planner agent to figure out HOW. Use when asked to "plan", "brainstorm",
   "I want to build X", or "let's design". Requires the subagents extension
-  and a supported multiplexer (cmux/tmux/zellij).
+  and tmux.
 ---
 
 # Plan

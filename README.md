@@ -1,12 +1,12 @@
 # pi-interactive-subagents
 
-Async subagents for [pi](https://github.com/badlogic/pi-mono) — spawn, orchestrate, and manage sub-agent sessions in multiplexer panes. **Fully non-blocking** — the main agent keeps working while subagents run in the background.
+Async subagents for [pi](https://github.com/badlogic/pi-mono) — spawn, orchestrate, and manage sub-agent sessions in tmux. **Fully non-blocking** — the main agent keeps working while subagents run in the background.
 
 https://github.com/user-attachments/assets/30adb156-cfb4-4c47-84ca-dd4aa80cba9f
 
 ## How It Works
 
-Call `subagent()` and it **returns immediately**. The sub-agent runs in its own terminal pane. A live widget above the input shows all running agents with elapsed time and progress. When a sub-agent finishes, its result is **steered back** into the main session as an async notification — triggering a new turn so the agent can process it.
+Call `subagent()` and it **returns immediately**. The sub-agent runs in its own tmux session. A live widget above the input shows all running agents with elapsed time and progress. When a sub-agent finishes, its result is **steered back** into the main session as an async notification — triggering a new turn so the agent can process it.
 
 ```
 ╭─ Subagents ──────────────────────── 2 running ─╮
@@ -29,26 +29,13 @@ subagent({ name: "Scout: DB", agent: "scout", task: "Map database schema" });
 pi install git:github.com/HazAT/pi-interactive-subagents
 ```
 
-Supported multiplexers:
-
-- [cmux](https://github.com/manaflow-ai/cmux)
-- [tmux](https://github.com/tmux/tmux)
-- [zellij](https://zellij.dev)
-- [WezTerm](https://wezfurlong.org/wezterm/) (terminal emulator with built-in multiplexing)
-
-Start pi inside one of them:
+Requires [tmux](https://github.com/tmux/tmux). Start pi inside a tmux session:
 
 ```bash
-cmux pi
-# or
 tmux new -A -s pi 'pi'
-# or
-zellij --session pi   # then run: pi
-# or
-# just run pi inside WezTerm — no wrapper needed
 ```
 
-Optional: set `PI_SUBAGENT_MUX=cmux|tmux|zellij|wezterm` to force a specific backend.
+Each subagent runs in its own tmux session — your main window stays clean. Browse running agents with `Ctrl+b s` (tmux session list).
 
 ## What's Included
 
@@ -58,7 +45,7 @@ Optional: set `PI_SUBAGENT_MUX=cmux|tmux|zellij|wezterm` to force a specific bac
 
 | Tool              | Description                                                                     |
 | ----------------- | ------------------------------------------------------------------------------- |
-| `subagent`        | Spawn a sub-agent in a dedicated multiplexer pane (async — returns immediately) |
+| `subagent`        | Spawn a sub-agent in a dedicated tmux session (async — returns immediately)     |
 | `subagents_list`  | List available agent definitions                                                |
 | `set_tab_title`   | Update tab/window title to show progress                                        |
 | `subagent_resume` | Resume a previous sub-agent session (async)                                     |
@@ -94,7 +81,7 @@ Agent discovery follows priority: **project-local** (`.pi/agents/`) > **global**
 
 ```
 1. Agent calls subagent()         → returns immediately ("started")
-2. Sub-agent runs in mux pane     → widget shows live progress
+2. Sub-agent runs in tmux session → widget shows live progress
 3. User keeps chatting             → main session fully interactive
 4. Sub-agent finishes              → result steered back as interrupt
 5. Main agent processes result     → continues with new context
@@ -139,7 +126,7 @@ subagent({ name: "Designer", agent: "game-designer", cwd: "agents/game-designer"
 
 | Parameter      | Type    | Default  | Description                                                             |
 | -------------- | ------- | -------- | ----------------------------------------------------------------------- |
-| `name`         | string  | required | Display name (shown in widget and pane title)                           |
+| `name`         | string  | required | Display name (shown in widget and session title)                        |
 | `task`         | string  | required | Task prompt for the sub-agent                                           |
 | `agent`        | string  | —        | Load defaults from agent definition                                     |
 | `fork`         | boolean | `false`  | Copy current session for full context                                   |
@@ -335,26 +322,10 @@ Every sub-agent session displays a compact tools widget showing available and de
 ## Requirements
 
 - [pi](https://github.com/badlogic/pi-mono) — the coding agent
-- One supported multiplexer:
-  - [cmux](https://github.com/manaflow-ai/cmux)
-  - [tmux](https://github.com/tmux/tmux)
-  - [zellij](https://zellij.dev)
-  - [WezTerm](https://wezfurlong.org/wezterm/)
+- [tmux](https://github.com/tmux/tmux) — terminal multiplexer
 
 ```bash
-cmux pi
-# or
 tmux new -A -s pi 'pi'
-# or
-zellij --session pi   # then run: pi
-# or
-# just run pi inside WezTerm
-```
-
-Optional backend override:
-
-```bash
-export PI_SUBAGENT_MUX=cmux   # or tmux, zellij, wezterm
 ```
 
 ## License
