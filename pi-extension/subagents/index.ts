@@ -128,11 +128,6 @@ function loadAgentDefaults(agentName: string): AgentDefaults | null {
   const paths = [
     join(process.cwd(), ".pi", "agents", `${agentName}.md`),
     join(configDir, "agents", `${agentName}.md`),
-    // join(
-    //   dirname(new URL(import.meta.url).pathname),
-    //   "../../agents",
-    //   `${agentName}.md`,
-    // ),
   ];
   for (const p of paths) {
     if (!existsSync(p)) continue;
@@ -974,13 +969,6 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         >();
 
         const dirs = [
-          {
-            path: join(
-              dirname(new URL(import.meta.url).pathname),
-              "../../agents",
-            ),
-            source: "package",
-          },
           { path: join(getAgentConfigDir(), "agents"), source: "global" },
           { path: join(process.cwd(), ".pi", "agents"), source: "project" },
         ];
