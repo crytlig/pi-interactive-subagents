@@ -1,4 +1,7 @@
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from "@mariozechner/pi-coding-agent";
 import { keyHint } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 import { Box, Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
@@ -37,14 +40,22 @@ const SubagentParams = Type.Object({
     }),
   ),
   systemPrompt: Type.Optional(
-    Type.String({ description: "Appended to system prompt (role instructions)" }),
+    Type.String({
+      description: "Appended to system prompt (role instructions)",
+    }),
   ),
-  model: Type.Optional(Type.String({ description: "Model override (overrides agent default)" })),
+  model: Type.Optional(
+    Type.String({ description: "Model override (overrides agent default)" }),
+  ),
   skills: Type.Optional(
-    Type.String({ description: "Comma-separated skills (overrides agent default)" }),
+    Type.String({
+      description: "Comma-separated skills (overrides agent default)",
+    }),
   ),
   tools: Type.Optional(
-    Type.String({ description: "Comma-separated tools (overrides agent default)" }),
+    Type.String({
+      description: "Comma-separated tools (overrides agent default)",
+    }),
   ),
   cwd: Type.Optional(
     Type.String({
@@ -74,7 +85,11 @@ interface AgentDefaults {
 }
 
 /** Tools that are gated by `spawning: false` */
-const SPAWNING_TOOLS = new Set(["subagent", "subagents_list", "subagent_resume"]);
+const SPAWNING_TOOLS = new Set([
+  "subagent",
+  "subagents_list",
+  "subagent_resume",
+]);
 
 /**
  * Resolve the effective set of denied tool names from agent defaults.
@@ -113,7 +128,11 @@ function loadAgentDefaults(agentName: string): AgentDefaults | null {
   const paths = [
     join(process.cwd(), ".pi", "agents", `${agentName}.md`),
     join(configDir, "agents", `${agentName}.md`),
-    join(dirname(new URL(import.meta.url).pathname), "../../agents", `${agentName}.md`),
+    // join(
+    //   dirname(new URL(import.meta.url).pathname),
+    //   "../../agents",
+    //   `${agentName}.md`,
+    // ),
   ];
   for (const p of paths) {
     if (!existsSync(p)) continue;
@@ -133,7 +152,8 @@ function loadAgentDefaults(agentName: string): AgentDefaults | null {
     return {
       model: get("model"),
       tools: get("tools"),
-      systemPromptMode: spm === "replace" ? "replace" : spm === "append" ? "append" : undefined,
+      systemPromptMode:
+        spm === "replace" ? "replace" : spm === "append" ? "append" : undefined,
       skills: get("skill") ?? get("skills"),
       thinking: get("thinking"),
       denyTools: get("deny-tools"),
@@ -157,7 +177,10 @@ function muxUnavailableResult(kind: "subagents" | "tab-title" = "subagents") {
   if (kind === "tab-title") {
     return {
       content: [
-        { type: "text" as const, text: `Terminal multiplexer not available. ${muxSetupHint()}` },
+        {
+          type: "text" as const,
+          text: `Terminal multiplexer not available. ${muxSetupHint()}`,
+        },
       ],
       details: { error: "mux not available" },
     };
@@ -293,7 +316,9 @@ function borderTop(title: string, info: string, width: number): string {
   const infoPart = ` ${info} ─`;
   const fillLen = Math.max(0, inner - titlePart.length - infoPart.length);
   const fill = "─".repeat(fillLen);
-  const content = `${titlePart}${fill}${infoPart}`.slice(0, inner).padEnd(inner, "─");
+  const content = `${titlePart}${fill}${infoPart}`
+    .slice(0, inner)
+    .padEnd(inner, "─");
   return `${ACCENT}╭${content}╮${RST}`;
 }
 
@@ -308,7 +333,10 @@ function borderBottom(width: number): string {
   return `${ACCENT}╰${"─".repeat(inner)}╯${RST}`;
 }
 
-function renderSubagentWidgetLines(agents: RunningSubagent[], width: number): string[] {
+function renderSubagentWidgetLines(
+  agents: RunningSubagent[],
+  width: number,
+): string[] {
   const count = agents.length;
   const title = "Subagents";
   const info = `${count} running`;
@@ -349,7 +377,10 @@ function updateWidget() {
       return {
         invalidate() {},
         render(width: number) {
-          return renderSubagentWidgetLines(Array.from(runningSubagents.values()), width);
+          return renderSubagentWidgetLines(
+            Array.from(runningSubagents.values()),
+            width,
+          );
         },
       };
     },
@@ -378,7 +409,10 @@ function startWidgetRefresh() {
  */
 async function launchSubagent(
   params: typeof SubagentParams.static,
-  ctx: { sessionManager: { getSessionFile(): string | null; getSessionId(): string }; cwd: string },
+  ctx: {
+    sessionManager: { getSessionFile(): string | null; getSessionId(): string };
+    cwd: string;
+  },
   options?: { surface?: string },
 ): Promise<RunningSubagent> {
   const startTime = Date.now();
@@ -398,7 +432,8 @@ async function launchSubagent(
   // Generate a deterministic session file path for this subagent.
   // This eliminates race conditions when multiple agents launch simultaneously —
   // each agent knows exactly which file is theirs.
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 23) + "Z";
+  const timestamp =
+    new Date().toISOString().replace(/[:.]/g, "-").slice(0, 23) + "Z";
   const uuid = [
     id,
     Math.random().toString(16).slice(2, 10),
@@ -436,7 +471,8 @@ async function launchSubagent(
   const identity = agentDefs?.body ?? params.systemPrompt ?? null;
   const systemPromptMode = agentDefs?.systemPromptMode;
   const identityInSystemPrompt = systemPromptMode && identity;
-  const roleBlock = identity && !identityInSystemPrompt ? `\n\n${identity}` : "";
+  const roleBlock =
+    identity && !identityInSystemPrompt ? `\n\n${identity}` : "";
   const fullTask = params.fork
     ? params.task
     : `${roleBlock}\n\n${modeHint}\n\n${tabTitleInstruction}\n\n${params.task}\n\n${summaryInstruction}`;
@@ -492,22 +528,38 @@ async function launchSubagent(
     );
   }
 
-  const subagentDonePath = join(dirname(new URL(import.meta.url).pathname), "subagent-done.ts");
+  const subagentDonePath = join(
+    dirname(new URL(import.meta.url).pathname),
+    "subagent-done.ts",
+  );
   parts.push("-e", shellEscape(subagentDonePath));
 
   if (effectiveModel) {
-    const model = effectiveThinking ? `${effectiveModel}:${effectiveThinking}` : effectiveModel;
+    const model = effectiveThinking
+      ? `${effectiveModel}:${effectiveThinking}`
+      : effectiveModel;
     parts.push("--model", shellEscape(model));
   }
 
   // Pass agent body as system prompt when configured
   if (identityInSystemPrompt && identity) {
-    const flag = systemPromptMode === "replace" ? "--system-prompt" : "--append-system-prompt";
+    const flag =
+      systemPromptMode === "replace"
+        ? "--system-prompt"
+        : "--append-system-prompt";
     parts.push(flag, shellEscape(identity));
   }
 
   if (effectiveTools) {
-    const BUILTIN_TOOLS = new Set(["read", "bash", "edit", "write", "grep", "find", "ls"]);
+    const BUILTIN_TOOLS = new Set([
+      "read",
+      "bash",
+      "edit",
+      "write",
+      "grep",
+      "find",
+      "ls",
+    ]);
     const builtins = effectiveTools
       .split(",")
       .map((t) => t.trim())
@@ -531,7 +583,9 @@ async function launchSubagent(
 
   // Propagate PI_CODING_AGENT_DIR so subagents use the same config root
   if (process.env.PI_CODING_AGENT_DIR) {
-    envParts.push(`PI_CODING_AGENT_DIR=${shellEscape(process.env.PI_CODING_AGENT_DIR)}`);
+    envParts.push(
+      `PI_CODING_AGENT_DIR=${shellEscape(process.env.PI_CODING_AGENT_DIR)}`,
+    );
   }
 
   if (denySet.size > 0) {
@@ -555,8 +609,14 @@ async function launchSubagent(
     parts.push(shellEscape(fullTask));
   } else {
     const sessionId = ctx.sessionManager.getSessionId();
-    const artifactDir = getArtifactDir(ctx.sessionManager.getSessionDir(), sessionId);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const artifactDir = getArtifactDir(
+      ctx.sessionManager.getSessionDir(),
+      sessionId,
+    );
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .slice(0, 19);
     const safeName = params.name
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, "") // strip everything except alphanumeric, spaces, hyphens
@@ -804,7 +864,11 @@ export default function subagentsExtension(pi: ExtensionAPI) {
                 customType: "subagent_result",
                 content: `Sub-agent "${running.name}" error: ${err?.message ?? String(err)}`,
                 display: true,
-                details: { name: running.name, task: running.task, error: err?.message },
+                details: {
+                  name: running.name,
+                  task: running.task,
+                  error: err?.message,
+                },
               },
               { triggerTurn: true, deliverAs: "steer" },
             );
@@ -837,15 +901,20 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         const agent = args.agent ? theme.fg("dim", ` (${args.agent})`) : "";
         const cwdHint = args.cwd ? theme.fg("dim", ` in ${args.cwd}`) : "";
         let text =
-          "▸ " + theme.fg("toolTitle", theme.bold(args.name ?? "(unnamed)")) + agent + cwdHint;
+          "▸ " +
+          theme.fg("toolTitle", theme.bold(args.name ?? "(unnamed)")) +
+          agent +
+          cwdHint;
 
         // Show a one-line task preview. renderCall is called repeatedly as the
         // LLM generates tool arguments, so args.task grows token by token.
         // We keep it compact here — Ctrl+O on renderResult expands the full content.
         const task = args.task ?? "";
         if (task) {
-          const firstLine = task.split("\n").find((l: string) => l.trim()) ?? "";
-          const preview = firstLine.length > 100 ? firstLine.slice(0, 100) + "…" : firstLine;
+          const firstLine =
+            task.split("\n").find((l: string) => l.trim()) ?? "";
+          const preview =
+            firstLine.length > 100 ? firstLine.slice(0, 100) + "…" : firstLine;
           if (preview) {
             text += "\n" + theme.fg("toolOutput", preview);
           }
@@ -875,7 +944,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         }
 
         // Fallback (shouldn't happen)
-        const text = typeof result.content?.[0]?.text === "string" ? result.content[0].text : "";
+        const text =
+          typeof result.content?.[0]?.text === "string"
+            ? result.content[0].text
+            : "";
         return new Text(theme.fg("dim", text), 0, 0);
       },
     });
@@ -903,7 +975,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
 
         const dirs = [
           {
-            path: join(dirname(new URL(import.meta.url).pathname), "../../agents"),
+            path: join(
+              dirname(new URL(import.meta.url).pathname),
+              "../../agents",
+            ),
             source: "package",
           },
           { path: join(getAgentConfigDir(), "agents"), source: "global" },
@@ -912,7 +987,9 @@ export default function subagentsExtension(pi: ExtensionAPI) {
 
         for (const { path: dir, source } of dirs) {
           if (!existsSync(dir)) continue;
-          for (const file of readdirSync(dir).filter((f) => f.endsWith(".md"))) {
+          for (const file of readdirSync(dir).filter((f) =>
+            f.endsWith(".md"),
+          )) {
             const content = readFileSync(join(dir, file), "utf8");
             const match = content.match(/^---\n([\s\S]*?)\n---/);
             if (!match) continue;
@@ -956,11 +1033,18 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         const details = result.details as any;
         const agents = details?.agents ?? [];
         if (agents.length === 0) {
-          return new Text(theme.fg("dim", "No subagent definitions found."), 0, 0);
+          return new Text(
+            theme.fg("dim", "No subagent definitions found."),
+            0,
+            0,
+          );
         }
         const lines = agents.map((a: any) => {
-          const badge = a.source === "project" ? theme.fg("accent", " (project)") : "";
-          const desc = a.description ? theme.fg("dim", ` — ${a.description}`) : "";
+          const badge =
+            a.source === "project" ? theme.fg("accent", " (project)") : "";
+          const desc = a.description
+            ? theme.fg("dim", ` — ${a.description}`)
+            : "";
           const model = a.model ? theme.fg("dim", ` [${a.model}]`) : "";
           return `  ${theme.fg("toolTitle", theme.bold(a.name))}${badge}${model}${desc}`;
         });
@@ -981,7 +1065,8 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         "(e.g. planning, executing todos, reviewing). Keep titles short and informative.",
       parameters: Type.Object({
         title: Type.String({
-          description: "New tab title (also applied to workspace/session when supported)",
+          description:
+            "New tab title (also applied to workspace/session when supported)",
         }),
       }),
 
@@ -998,7 +1083,9 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           };
         } catch (err: any) {
           return {
-            content: [{ type: "text", text: `Failed to set title: ${err?.message}` }],
+            content: [
+              { type: "text", text: `Failed to set title: ${err?.message}` },
+            ],
             details: { error: err?.message },
           };
         }
@@ -1021,13 +1108,18 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         "Results are delivered later via a steer message. Do NOT fabricate or assume results. " +
         "Use when a sub-agent was cancelled or needs follow-up work.",
       parameters: Type.Object({
-        sessionPath: Type.String({ description: "Path to the session .jsonl file to resume" }),
+        sessionPath: Type.String({
+          description: "Path to the session .jsonl file to resume",
+        }),
         name: Type.Optional(
-          Type.String({ description: "Display name for the terminal tab. Default: 'Resume'" }),
+          Type.String({
+            description: "Display name for the terminal tab. Default: 'Resume'",
+          }),
         ),
         message: Type.Optional(
           Type.String({
-            description: "Optional message to send after resuming (e.g. follow-up instructions)",
+            description:
+              "Optional message to send after resuming (e.g. follow-up instructions)",
           }),
         ),
       }),
@@ -1035,7 +1127,9 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       renderCall(args, theme) {
         const name = args.name ?? "Resume";
         const text =
-          "▸ " + theme.fg("toolTitle", theme.bold(name)) + theme.fg("dim", " — resuming session");
+          "▸ " +
+          theme.fg("toolTitle", theme.bold(name)) +
+          theme.fg("dim", " — resuming session");
         return new Text(text, 0, 0);
       },
 
@@ -1055,7 +1149,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         }
 
         // Fallback
-        const text = typeof result.content?.[0]?.text === "string" ? result.content[0].text : "";
+        const text =
+          typeof result.content?.[0]?.text === "string"
+            ? result.content[0].text
+            : "";
         return new Text(theme.fg("dim", text), 0, 0);
       },
 
@@ -1070,7 +1167,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         if (!existsSync(params.sessionPath)) {
           return {
             content: [
-              { type: "text", text: `Error: session file not found: ${params.sessionPath}` },
+              {
+                type: "text",
+                text: `Error: session file not found: ${params.sessionPath}`,
+              },
             ],
             details: { error: "session not found" },
           };
@@ -1103,9 +1203,12 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         // Build env prefix — propagate PI_CODING_AGENT_DIR for config isolation
         const resumeEnvParts: string[] = [];
         if (process.env.PI_CODING_AGENT_DIR) {
-          resumeEnvParts.push(`PI_CODING_AGENT_DIR=${shellEscape(process.env.PI_CODING_AGENT_DIR)}`);
+          resumeEnvParts.push(
+            `PI_CODING_AGENT_DIR=${shellEscape(process.env.PI_CODING_AGENT_DIR)}`,
+          );
         }
-        const resumeEnvPrefix = resumeEnvParts.length > 0 ? resumeEnvParts.join(" ") + " " : "";
+        const resumeEnvPrefix =
+          resumeEnvParts.length > 0 ? resumeEnvParts.join(" ") + " " : "";
 
         const command = `${resumeEnvPrefix}${parts.join(" ")}${cleanupMsgFile ? `; rm -f ${shellEscape(cleanupMsgFile)}` : ""}; echo '__SUBAGENT_DONE_'${exitStatusVar()}'__'`;
         sendCommand(surface, command);
@@ -1130,7 +1233,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         watchSubagent(running, watcherAbort.signal)
           .then((result) => {
             updateWidget();
-            const allEntries = getNewEntries(params.sessionPath, entryCountBefore);
+            const allEntries = getNewEntries(
+              params.sessionPath,
+              entryCountBefore,
+            );
             const summary =
               findLastAssistantMessage(allEntries) ??
               (result.exitCode !== 0
@@ -1169,14 +1275,20 @@ export default function subagentsExtension(pi: ExtensionAPI) {
 
         return {
           content: [{ type: "text", text: `Session "${name}" resumed.` }],
-          details: { id, name, sessionPath: params.sessionPath, status: "started" },
+          details: {
+            id,
+            name,
+            sessionPath: params.sessionPath,
+            status: "started",
+          },
         };
       },
     });
 
   // /iterate command — fork the session into a subagent
   pi.registerCommand("iterate", {
-    description: "Fork session into a subagent for focused work (bugfixes, iteration)",
+    description:
+      "Fork session into a subagent for focused work (bugfixes, iteration)",
     handler: async (args, _ctx) => {
       const task = args?.trim() || "";
       const toolCall = task
@@ -1209,7 +1321,8 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         return;
       }
 
-      const taskText = task || `You are the ${agentName} agent. Wait for instructions.`;
+      const taskText =
+        task || `You are the ${agentName} agent. Wait for instructions.`;
       const displayName = agentName[0].toUpperCase() + agentName.slice(1);
       const toolCall = `Use subagent with agent: "${agentName}", name: "${displayName}", task: ${JSON.stringify(taskText)}`;
       pi.sendUserMessage(toolCall);
@@ -1225,23 +1338,32 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       render(width: number): string[] {
         const name = details.name ?? "subagent";
         const exitCode = details.exitCode ?? 0;
-        const elapsed = details.elapsed != null ? formatElapsed(details.elapsed) : "?";
+        const elapsed =
+          details.elapsed != null ? formatElapsed(details.elapsed) : "?";
         const bgFn =
           exitCode === 0
             ? (text: string) => theme.bg("toolSuccessBg", text)
             : (text: string) => theme.bg("toolErrorBg", text);
-        const icon = exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
-        const status = exitCode === 0 ? "completed" : `failed (exit ${exitCode})`;
-        const agentTag = details.agent ? theme.fg("dim", ` (${details.agent})`) : "";
+        const icon =
+          exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
+        const status =
+          exitCode === 0 ? "completed" : `failed (exit ${exitCode})`;
+        const agentTag = details.agent
+          ? theme.fg("dim", ` (${details.agent})`)
+          : "";
 
         const header = `${icon} ${theme.fg("toolTitle", theme.bold(name))}${agentTag} ${theme.fg("dim", "—")} ${status} ${theme.fg("dim", `(${elapsed})`)}`;
-        const rawContent = typeof message.content === "string" ? message.content : "";
+        const rawContent =
+          typeof message.content === "string" ? message.content : "";
 
         // Clean summary (remove session ref and leading label for display)
         const summary = rawContent
           .replace(/\n\nSession: .+\nResume: .+$/, "")
           .replace(`Sub-agent "${name}" completed (${elapsed}).\n\n`, "")
-          .replace(`Sub-agent "${name}" failed (exit code ${exitCode}).\n\n`, "");
+          .replace(
+            `Sub-agent "${name}" failed (exit code ${exitCode}).\n\n`,
+            "",
+          );
 
         // Build content for the box
         const contentLines = [header];
@@ -1255,8 +1377,12 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           }
           if (details.sessionFile) {
             contentLines.push("");
-            contentLines.push(theme.fg("dim", `Session: ${details.sessionFile}`));
-            contentLines.push(theme.fg("dim", `Resume:  pi --session ${details.sessionFile}`));
+            contentLines.push(
+              theme.fg("dim", `Session: ${details.sessionFile}`),
+            );
+            contentLines.push(
+              theme.fg("dim", `Resume:  pi --session ${details.sessionFile}`),
+            );
           }
         } else {
           // Collapsed: preview + expand hint
@@ -1267,10 +1393,14 @@ export default function subagentsExtension(pi: ExtensionAPI) {
             }
             const totalLines = summary.split("\n").length;
             if (totalLines > 5) {
-              contentLines.push(theme.fg("muted", `… ${totalLines - 5} more lines`));
+              contentLines.push(
+                theme.fg("muted", `… ${totalLines - 5} more lines`),
+              );
             }
           }
-          contentLines.push(theme.fg("muted", keyHint("app.tools.expand", "to expand")));
+          contentLines.push(
+            theme.fg("muted", keyHint("app.tools.expand", "to expand")),
+          );
         }
 
         // Render via Box for background + padding, with blank line above for separation
@@ -1303,7 +1433,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       }
 
       // Load the plan skill from the subagents extension directory
-      const planSkillPath = join(dirname(new URL(import.meta.url).pathname), "plan-skill.md");
+      const planSkillPath = join(
+        dirname(new URL(import.meta.url).pathname),
+        "plan-skill.md",
+      );
       let content = readFileSync(planSkillPath, "utf8");
       content = content.replace(/^---\n[\s\S]*?\n---\n*/, "");
       pi.sendUserMessage(
