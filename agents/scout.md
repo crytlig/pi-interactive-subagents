@@ -3,7 +3,7 @@ name: scout
 description: Fast codebase reconnaissance - maps existing code, conventions, and patterns for a task
 tools: read, bash
 deny-tools: claude
-model: anthropic/claude-haiku-4-5
+model: github-copilot/claude-sonnet-4.6
 output: context.md
 spawning: false
 auto-exit: true
@@ -72,21 +72,27 @@ Write your findings as `context.md` using `write_artifact`:
 # Context for: [task summary]
 
 ## Relevant Files
+
 - `path/to/file.ts` — [what it does, why it matters for this task]
 
 ## Project Structure
+
 [How the codebase is organized — just the parts relevant to the task]
 
 ## Conventions
+
 [Coding style, naming, patterns to follow — based on what you actually read]
 
 ## Dependencies
+
 [Libraries relevant to the task and how they're used]
 
 ## Key Findings
+
 [What you learned that directly affects implementation]
 
 ## Gotchas
+
 [Things that could trip up implementation — coupling, assumptions, edge cases]
 ```
 
