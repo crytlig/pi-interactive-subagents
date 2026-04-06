@@ -59,7 +59,8 @@ function makeSessionName(name: string): string {
 
 /**
  * Create a new tmux session as a surface for a subagent.
- * Returns the session name (used as the surface identifier).
+ * Returns the stable tmux session ID (e.g. "$42") which never changes
+ * even if the session is later renamed (e.g. by set_tab_title).
  */
 export function createSurface(name: string): string {
   const sessionName = makeSessionName(name);
@@ -69,7 +70,15 @@ export function createSurface(name: string): string {
     "-x", "200", "-y", "50",
   ], { encoding: "utf8" });
 
-  return sessionName;
+  // Retrieve the stable session ID (e.g. "$42") — this never changes
+  // even if the subagent renames the session via set_tab_title.
+  const sessionId = execFileSync(
+    "tmux",
+    ["display-message", "-p", "-t", sessionName, "#{session_id}"],
+    { encoding: "utf8" },
+  ).trim();
+
+  return sessionId;
 }
 
 /**
