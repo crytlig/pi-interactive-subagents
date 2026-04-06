@@ -26,7 +26,7 @@ subagent({ name: "Scout: DB", agent: "scout", task: "Map database schema" });
 ## Install
 
 ```bash
-pi install git:github.com/HazAT/pi-interactive-subagents
+pi install git:github.com/crytlig/pi-interactive-subagents
 ```
 
 Requires [tmux](https://github.com/tmux/tmux). Start pi inside a tmux session:
@@ -43,12 +43,12 @@ Each subagent runs in its own tmux session — your main window stays clean. Bro
 
 **Subagents** — 4 tools + 3 commands:
 
-| Tool              | Description                                                                     |
-| ----------------- | ------------------------------------------------------------------------------- |
-| `subagent`        | Spawn a sub-agent in a dedicated tmux session (async — returns immediately)     |
-| `subagents_list`  | List available agent definitions                                                |
-| `set_tab_title`   | Update tab/window title to show progress                                        |
-| `subagent_resume` | Resume a previous sub-agent session (async)                                     |
+| Tool              | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| `subagent`        | Spawn a sub-agent in a dedicated tmux session (async — returns immediately) |
+| `subagents_list`  | List available agent definitions                                            |
+| `set_tab_title`   | Update tab/window title to show progress                                    |
+| `subagent_resume` | Resume a previous sub-agent session (async)                                 |
 
 | Command                    | Description                          |
 | -------------------------- | ------------------------------------ |
@@ -73,7 +73,9 @@ Each subagent runs in its own tmux session — your main window stays clean. Bro
 | **reviewer**      | Opus (medium thinking) | Reviews code for bugs, security issues, correctness                                      |
 | **visual-tester** | Sonnet                 | Visual QA via Chrome CDP — screenshots, responsive testing, interaction testing          |
 
-Agent discovery follows priority: **project-local** (`.pi/agents/`) > **global** (`~/.pi/agent/agents/`) > **package-bundled**. Override any bundled agent by placing your own version in the higher-priority location.
+Agent discovery follows priority: **project-local** (`.pi/agents/`) > **global** (`~/.pi/agent/agents/`).
+
+Override any bundled agent by placing your own version in the higher-priority location.
 
 ---
 
@@ -119,7 +121,12 @@ subagent({
 });
 
 // Custom working directory
-subagent({ name: "Designer", agent: "game-designer", cwd: "agents/game-designer", task: "..." });
+subagent({
+  name: "Designer",
+  agent: "game-designer",
+  cwd: "agents/game-designer",
+  task: "...",
+});
 ```
 
 ### Parameters
@@ -290,8 +297,16 @@ project/
 ```
 
 ```typescript
-subagent({ name: "Game Designer", cwd: "agents/game-designer", task: "Design the combat system" });
-subagent({ name: "SRE", cwd: "agents/sre", task: "Review deployment pipeline" });
+subagent({
+  name: "Game Designer",
+  cwd: "agents/game-designer",
+  task: "Design the combat system",
+});
+subagent({
+  name: "SRE",
+  cwd: "agents/sre",
+  task: "Review deployment pipeline",
+});
 ```
 
 Set a default `cwd` in agent frontmatter:
